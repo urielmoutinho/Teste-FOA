@@ -2,7 +2,9 @@
 
 ## Erros encontrados
 
-1-> 
+1 Erro no comando identify ele faz o carregamento da página no arquivo Startups.
+
+```csharp
 
 public void ConfigureServices(IServiceCollection services)
         {
@@ -15,9 +17,11 @@ public void ConfigureServices(IServiceCollection services)
             //    .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
         }
+```
 
-	1.1-> 
-    
+1.1 Descomnetando a linha o erro não é mais identificado e assim consegue fazer o carregamento da página normalmente.
+
+```csharp
     public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -29,27 +33,31 @@ public void ConfigureServices(IServiceCollection services)
             .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
         }
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-2-> Esse tipo de erro faz com que o conteúdo do body dentro do main fique invisível para o usuário que esta navegando na pagina.
+2 Esse tipo de erro faz com que o conteúdo do body dentro do main fique invisível para o usuário que esta navegando na pagina.
+
+```csharp
       <div class="container">
             <main hidden role="main" class="pb-3">
                 @RenderBody()
             </main>
         </div>
-
-	2.1-> para corrigilo basta somente retirar a tag de CSS hidden que esta dando essa estilização invisível para o main.
-    
+```
+2.1 Para corrigilo basta somente retirar a tag de CSS hidden que esta dando essa estilização invisível para o main.
+```csharp   
          <div class="container">
                 <main role="main" class="pb-3">
                 @RenderBody()
                 </main>
             </div>
-
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-3-> Este é um erro de junção na função de banco de dados, com esse tipo de erro os dados vindos das duas tabelas são iguais, assim duplicando os dados e cadastrando o mesmo livro mais duas vezes.
+3 Este é um erro de junção na função de banco de dados, com esse tipo de erro os dados vindos das duas tabelas são iguais, assim duplicando os dados e cadastrando o mesmo livro mais duas vezes.
 
+```csharp
  public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.BookViewModel.FromSqlRaw(@"
@@ -64,9 +72,10 @@ public void ConfigureServices(IServiceCollection services)
                     inner join Author A on A.Id = A.Id");
             return View(await applicationDbContext.ToListAsync());
         }
+```
+3.1 Neste caso a forma correta da solução do erro é com a comparação ao b.AuthorId onde retorna somente uma vez ao usuário o livro cadastrado.
 
-	3.1-> Neste caso a forma correta da solução do erro é com a comparação ao b.AuthorId onde retorna somente uma vez ao usuário o livro cadastrado.
-
+```csharp
     public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.BookViewModel.FromSqlRaw(@"
@@ -81,48 +90,49 @@ public void ConfigureServices(IServiceCollection services)
                     inner join Author A on A.Id = B.AuthorId");
             return View(await applicationDbContext.ToListAsync());
         }
-
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-4-> Erro onde todas as strings se encontram privadas, assim fazendo com que assim que o usuário cadastre não seja possivel o retorno e a visualização da mesma.
-
+4 Erro onde todas as strings se encontram privadas, assim fazendo com que assim que o usuário cadastre não seja possivel o retorno e a visualização da mesma.
+```csharp
     public string ISBN { get; private set; }
     public string Publisher { get; private set; }
     public string Title { get; private set; }
-
-	4.1-> A solução é bem simples, com a retirada do atributo de private o usuário retorna a visualizar as informações armazenadas em Titulo, ISBN e Publisher.
+```
+4.1 A solução é bem simples, com a retirada do atributo de private o usuário retorna a visualizar as informações armazenadas em Titulo, ISBN e Publisher.
+```csharp
         public string ISBN { get; set; }
 
         public string Publisher { get; set; }
 
         public string Title { get; set; }
-
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-5-> A falta do Title implica na não criação do titulo quando inserido na aba de criação de livros.
-    
+5 A falta do Title implica na não criação do titulo quando inserido na aba de criação de livros.
+```csharp
     public async Task<IActionResult> Create([Bind("Id,AuthorId,Publisher,ISBN,PublishDate")] Book book)
-
-	5.1->Erro é facilmente corrigido com a inserção do Title dentro do Bind.
-        
+```
+5.1 Erro é facilmente corrigido com a inserção do Title dentro do Bind.
+```csharp        
         public async Task<IActionResult> Create([Bind("Id,Title,AuthorId,Publisher,ISBN,PublishDate")] Book book)
-
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-6->A falta do Title implica na não alteração do titulo quando inserido na aba de alteração de livros.
-
+6 A falta do Title implica na não alteração do titulo quando inserido na aba de alteração de livros.
+```csharp
     public async Task<IActionResult> Edit(Guid id, [Bind("Id,AuthorId,Publisher,ISBN,PublishDate")] Book book)
-
-	6.1->Erro é facilmente corrigido com a inserção do Title dentro do Bind.
-    
+```
+6.1 Erro é facilmente corrigido com a inserção do Title dentro do Bind.
+```csharp  
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,AuthorId,Publisher,ISBN,PublishDate")] Book book)
-
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-7. Erro na remoção do livro, que deve acontecer antes do salvamento das informação.
-
+7 Erro na remoção do livro, que deve acontecer antes do salvamento das informação.
+```csharp
     public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             var book = await _context.Book.FindAsync(id);
@@ -130,9 +140,9 @@ public void ConfigureServices(IServiceCollection services)
             _context.Book.Remove(book);
             return RedirectToAction(nameof(Index));
         }
-
-	7.1->Erro pode ser resolvido com a inversão de ordem das funções assim tento exito em excluir o livro desejado.
-    
+```
+7.1 Erro pode ser resolvido com a inversão de ordem das funções assim tento exito em excluir o livro desejado.
+```csharp
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             var book = await _context.Book.FindAsync(id);
@@ -140,12 +150,13 @@ public void ConfigureServices(IServiceCollection services)
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ## Itens Bonus Completados
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Ordenar os resultados dos autores por nome.
-
+```csharp
     public async Task<IActionResult> Index(string sortOrder, string searchString)
         { 
             ViewData["CurrentFilter"] = searchString;
@@ -177,9 +188,10 @@ Ordenar os resultados dos autores por nome.
 
 
         }
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Ordenar os resultados dos livros por título.
-
+```csharp
     public async Task<IActionResult> Index(string sortOrder, string searchString)
             {       
                 ViewData["CurrentFilter"] = searchString;
@@ -201,9 +213,10 @@ Ordenar os resultados dos livros por título.
                 return View(await Autores.AsNoTracking().ToListAsync());
         
             }
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Adicionar pesquisa por nome de autor.
-
+```csharp
     <form asp-action="Index" method="get">
         <div class="form-actions no-color">
             <p>
@@ -213,9 +226,10 @@ Adicionar pesquisa por nome de autor.
             </p>
         </div>
     </form>
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Adicionar pesquisa por título de livro.
-
+```csharp
     <form asp-action="Index" method="get">
         <div class="form-actions no-color">
             <p>
@@ -225,4 +239,5 @@ Adicionar pesquisa por título de livro.
             </p>
         </div>
     </form>
+```
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
